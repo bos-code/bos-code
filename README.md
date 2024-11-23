@@ -8,11 +8,11 @@ I'm a Software engineer excited about building applications that solve real-worl
 
 **Here's a quick summary about me**:
 
-- 🌱 I’m currently building projects with Node.js
+- 🌱 I’m currently building projects with vanilla.js
 - 👀 I’m interested in the Javascript ecosystem for MERN developers
 - 😊 I’m looking for help with open-source projects, hackathons, internships, and entry-level opportunities.
 - 💼 Job interests: Software Engineer, Front Engineer, Backend Engineer or UI Engineer.
-- 💞️ I’m looking to collaborate on full-stack projects, I can also jump on fun web3 projects. (I've worked on an NFT project before)
+- 💞️ I’m looking to collaborate on full-stack projects, I can also jump on fun web3 projects. 
 - 📫 You can [view my resume](https://drive.google.com/file/d/1r7XOAlVcaIAqf1T1Ca3Uxu4V438acKTd/view?usp=sharing) and contact me by emailing to chidera9713@gmail.com
 
 <br>
