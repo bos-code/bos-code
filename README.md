@@ -12,9 +12,9 @@
  
  🔭 I’m currently working on **Javascript projects**
  
- 🌱 I’m currently learning **javascript, firebase and react**
+ 🌱 I’m currently learning **javascript,Tailwind css, firebase and react**
 
-💬 Ask me about **CSS, SASS, Firebase, Js)**
+💬 Ask me about **CSS, SASS, Firebase, Js )**
 
 ⚡ Fun fact **Naruto shippuden on a raining night**
 
@@ -34,8 +34,10 @@
  
 <h2 align="center">⚒️ Languages-Frameworks-Tools ⚒️</h2>
 <br/>
+<
 <div align="center" >
-    <img src="https://skillicons.dev/icons?i=bootstrap,tailwind,less,html,css,vscode,github,figma,git," /><br>
+    <img src="https://skillicons.dev/icons?i=bootstrap,tailwind,less,html,css,vscode,github,figma,git," />
+  <br>
     <img src="https://skillicons.dev/icons?i=python,javascript,firebase,react" /><br>
 </div>
 
