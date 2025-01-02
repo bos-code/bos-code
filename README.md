@@ -34,16 +34,15 @@
  
 <h2 align="center">⚒️ Languages-Frameworks-Tools ⚒️</h2>
 <br/>
-<
+
 <div align="center" >
-    <img src="https://skillicons.dev/icons?i=bootstrap,tailwind,less,html,css,vscode,github,figma,git," />
+    <img src="https://skillicons.dev/icons?i=bootstrap,tailwind,sass,less,html,css,vscode,github,figma,git," />
   <br>
-    <img src="https://skillicons.dev/icons?i=python,javascript,firebase,react" /><br>
+    <img src="https://skillicons.dev/icons?i=python,javascript,firebase,react,vite" /><br>
 </div>
 
 <br/>
-<hr/>
-
+<hr/>                                                                                                                                                                                                                                                                                                                                                                                                       
 <div align="center">
   <h2>🐍 My Contributions 🐍</h2>
   <br>
