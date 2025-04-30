@@ -1,71 +1,70 @@
-<img align="right" src="https://visitor-badge.laobi.icu/badge?page_id=bos-code.bos-code" />
+<!-- VISITOR BADGE -->
+<p align="right">
+  <img src="https://visitor-badge.laobi.icu/badge?page_id=bos-code.bos-code" alt="visitor badge"/>
+</p>
 
+<!-- HEADER -->
 <h1 align="center">
-    <img src="https://readme-typing-svg.herokuapp.com/?font=Righteous&size=35&center=true&vCenter=true&width=500&height=70&duration=4000&lines=Hi+There!+👋;+I'm+Chidera+okonkwo!;" />
+  <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&size=32&duration=4000&pause=1000&center=true&vCenter=true&multiline=true&width=600&height=100&lines=Hey+there+%F0%9F%91%8B+I'm+Chidera+Okonkwo!;Frontend+Dev+%7C+React+Fan+%7C+Design+Lover" alt="Typing SVG" />
 </h1>
 
-<h3 align="center">A passionate software developer from Nigeria NGA</h3>
+<p align="center">
+  <img src="https://img.shields.io/badge/Made_with❤️_by-Chidera-orange?style=flat-square" />
+</p>
 
-<br/>
+---
+
+<!-- SHORT BIO -->
+<h3 align="center">🌍 Based in Nigeria & building with creativity + code</h3>
 
 <div align="center">
- 
- 🔭 I’m currently working on **Javascript projects**
- 
- 🌱 I’m currently learning **javascript,Tailwind css, firebase and react**
-
-💬 Ask me about **CSS, SASS, Firebase, Js )**
-
-⚡ Fun fact **Naruto shippuden on a raining night**
-
- </div>
- 
-<div align="center"> 
-  <a href="mailto:chidera9713@gmail.com">
-    <img src="https://img.shields.io/badge/Gmail-333333?style=for-the-badge&logo=gmail&logoColor=red" />
-  </a>
-
-  <a href="https://bos-code.github.io" target="_blank">
-     <img src="https://img.shields.io/badge/Portfolio-FF5722?style=for-the-badge&logo=todoist&logoColor=white" target="_blank" /> <!-- sqlite, safari, google-chrome are other good icon options -->
-  </a>
+  <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&size=18&pause=1000&color=F97316&vCenter=true&center=true&width=400&lines=🌱+Learning+React%2C+TailwindCSS%2C+Firebase;⚡+Ask+me+about+CSS%2C+SASS%2C+JS;🔭+Currently+working+on+cool+JavaScript+projects;🎯+Goal%3A+Build+ultra-polished+UI/UX;🍥+Fun+fact%3A+Naruto+on+a+rainy+night+is+peak+vibes" />
 </div>
 
- <hr/>
- 
-<h2 align="center">⚒️ Languages-Frameworks-Tools ⚒️</h2>
-<br/>
+---
 
-<div align="center" >
-    <img src="https://skillicons.dev/icons?i=bootstrap,tailwind,sass,less,html,css,vscode,github,figma,git," />
-  <br>
-    <img src="https://skillicons.dev/icons?i=python,javascript,firebase,react,vite" /><br>
-</div>
+<!-- CONNECT -->
+<h2 align="center">📫 Let’s Connect!</h2>
+<p align="center">
+  <a href="mailto:chidera9713@gmail.com"><img src="https://img.shields.io/badge/Gmail-EA4335?style=for-the-badge&logo=gmail&logoColor=white" /></a>
+  <a href="https://bos-code.github.io" target="_blank"><img src="https://img.shields.io/badge/Portfolio-0A192F?style=for-the-badge&logo=google-chrome&logoColor=00FFFF" /></a>
+</p>
 
-<br/>
-<hr/>                                                                                                                                                                                                                                                                                                                                                                                                       
-<div align="center">
-  <h2>🐍 My Contributions 🐍</h2>
-  <br>
- <img alt="snake eating my contributions" src="https://raw.githubusercontent.com/bos-code/bos-code/output/github-contribution-grid-snake.svg" />
-  <br/><br/><br/>
-</div>
+---
 
-<hr/>
+<!-- SKILLS -->
+<h2 align="center">🚀 Tech Stack</h2>
 
-<h2 align="center">⚡ Stats ⚡</h2>
-<br>
-<div align=center>
-  <img width=390 src="https://github-readme-stats.vercel.app/api?username=bos-code&count_public=true&show_icons=true&theme=react&rank_icon=&border_radius=10" alt="readme stats" />
- <img width=390 src="https://github-readme-streak-stats.herokuapp.com/?user=bos-code&count_public=true&show_icons=true&theme=react&rank_icon=github&border_radius=10" alt="readme stats" />
+<p align="center">
+  <img src="https://skillicons.dev/icons?i=html,css,sass,tailwind,less,js,react,firebase,vite,python" />
   <br/>
-  <br/>
-  <img width=390 align="center"  src="https://github-readme-stats.vercel.app/api/top-langs?username=bos-code&hide=HTML&langs_count=8&layout=compact&theme=react&border_radius=10&size_weight=0.5&count_weight=0.5&exclude_repo=github-readme-stats" alt="top langs" />
-</div>
+  <img src="https://skillicons.dev/icons?i=figma,github,git,vscode" />
+</p>
 
-<br/><br/>
+---
 
-<hr/>
+<!-- STATS -->
+<h2 align="center">📊 GitHub Stats</h2>
 
-<br/>
+<p align="center">
+  <img width="400" src="https://github-readme-stats.vercel.app/api?username=bos-code&show_icons=true&theme=tokyonight&border_radius=15" alt="GitHub Stats" />
+  <img width="400" src="https://github-readme-streak-stats.herokuapp.com?user=bos-code&theme=tokyonight&border_radius=15" alt="GitHub Streak" />
+  <br/><br/>
+  <img width="400" src="https://github-readme-stats.vercel.app/api/top-langs/?username=bos-code&layout=compact&theme=tokyonight&border_radius=15&hide=html" alt="Top Languages" />
+</p>
 
+---
 
+<!-- SNAKE CONTRIBUTIONS -->
+<h2 align="center">🐍 Activity Snake</h2>
+
+<p align="center">
+  <img src="https://github.com/bos-code/bos-code/blob/output/github-contribution-grid-snake.svg" alt="Snake animation" />
+</p>
+
+---
+
+<!-- MOTTO -->
+<p align="center">
+  <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&size=22&pause=1000&color=10B981&vCenter=true&center=true&width=500&lines=“Do+mighty+things.”" />
+</p>
