@@ -18,7 +18,7 @@
 <h3 align="center">🌍 Based in Nigeria & building with creativity + code</h3>
 
 <div align="center">
-  <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&size=18&pause=1000&color=F97316&vCenter=true&center=true&width=400&lines=🌱+Learning+React%2C+TailwindCSS%2C+Firebase;⚡+Ask+me+about+CSS%2C+SASS%2C+JS;🔭+Currently+working+on+cool+JavaScript+projects;🎯+Goal%3A+Build+ultra-polished+UI/UX;🍥+Fun+fact%3A+Naruto+on+a+rainy+night+is+peak+vibes" />
+  <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&size=18&pause=1000&color=F97316&vCenter=true&center=true&width=400&lines=🌱+lover of+React%2C+TailwindCSS%2C+Firebase;⚡+Ask+me+about+CSS%2C+SASS%2C+JS;🔭+Currently+working+on+cool+JavaScript+projects;🎯+Goal%3A+Build+ultra-polished+UI/UX;🍥+Fun+fact%3A+Naruto+on+a+rainy+night+is+peak+vibes" />
 </div>
 
 ---
@@ -38,7 +38,9 @@
 <p align="center">
   <img src="https://skillicons.dev/icons?i=html,css,sass,tailwind,less,js,react,firebase,vite,python" />
   <br/>
-  <img src="https://skillicons.dev/icons?i=figma,github,git,vscode,woodpress,vercel" />
+  <img src="https://skillicons.dev/icons?i=figma,github,git,vscode,native,next,vercel,bun,pnpm" />
+  <br/>
+  <img src="https://skillicons.dev/icons?i=docker,materialui,redux,supabase,ts,webflow,wordpress" />
 </p>
 
 ---
