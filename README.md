@@ -35,13 +35,13 @@
 <!-- SKILLS -->
 <h2 align="center">🚀 Tech Stack</h2>
 
-<p align="center">
-  <img src="https://skillicons.dev/icons?i=html,css,sass,tailwind,less,js,react,firebase,vite,python" />
+<div align="center">
+<img src="https://skillicons.dev/icons?i=html,css,sass,tailwind,less,js,react,firebase,vite,python" />
   <br/>
-  <img src="https://skillicons.dev/icons?i=figma,github,git,vscode,native,next,vercel,bun,pnpm" />
+  <img src="https://skillicons.dev/icons?i=figma,github,git,vscode,next,vercel,bun,pnpm" />
   <br/>
   <img src="https://skillicons.dev/icons?i=docker,materialui,redux,supabase,ts,webflow,wordpress" />
-</p>
+</div>
 
 ---
 
