@@ -36,7 +36,7 @@
 <h2 align="center">🚀 Tech Stack</h2>
 
 <div align="center">
-<img src="https://skillicons.dev/icons?i=html,css,sass,tailwind,less,js,react,firebase,vite,python" />
+  <img src="https://skillicons.dev/icons?i=html,css,sass,tailwind,less,js,react,firebase,vite,python" />
   <br/>
   <img src="https://skillicons.dev/icons?i=figma,github,git,vscode,next,vercel,bun,pnpm" />
   <br/>
@@ -45,7 +45,7 @@
 
 ---
 
-<!-- STATS -->
+<!-- GITHUB STATS -->
 <h2 align="center">📊 GitHub Stats</h2>
 
 <p align="center">
@@ -57,11 +57,31 @@
 
 ---
 
+<!-- LOC & COMMIT ACTIVITY -->
+<h2 align="center">💻 Code Stats & Commit Activity</h2>
+
+<p align="center">
+  <!-- LOC + PRs + Issues + Commits (via metrics.lecoq.io) -->
+  <img src="https://metrics.lecoq.io/bos-code?template=classic&isocalendar=1&languages=1&repos=1&followup=0" alt="Code Metrics Overview" width="400" />
+  <!-- Commit Activity Graph -->
+  <img src="https://github-readme-activity-graph.cyclic.app/graph?username=bos-code&theme=react-dark&hide_border=true" alt="Commit Activity Graph" width="400" />
+</p>
+
+---
+
 <!-- SNAKE CONTRIBUTIONS -->
 <h2 align="center">🐍 Activity Snake</h2>
 
 <p align="center">
   <img src="https://github.com/bos-code/bos-code/blob/output/github-contribution-grid-snake.svg" alt="Snake animation" />
+</p>
+
+---
+
+<!-- TROPHIES / ACHIEVEMENTS -->
+<h2 align="center">🏆 GitHub Achievements</h2>
+<p align="center">
+  <img src="https://github-profile-trophy.vercel.app/?username=bos-code&theme=tokyonight&no-bg=true&margin-w=15&margin-h=15" alt="GitHub Trophies" />
 </p>
 
 ---
