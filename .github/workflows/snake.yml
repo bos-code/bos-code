@@ -9,6 +9,7 @@ on:
       - main
     paths:
       - ".github/workflows/snake.yml"
+      - ".github/scripts/generate-profile-stats.mjs"
 
 permissions:
   contents: write
@@ -28,21 +29,10 @@ jobs:
       - name: Prepare output directory
         run: mkdir -p dist
 
-      - name: Generate dark GitHub stats
-        uses: soulteary/github-readme-stats-action@v1.0.0
-        with:
-          card: stats
-          options: "username=${{ github.repository_owner }}&show_icons=true&include_all_commits=true&hide=contribs&hide_border=true&bg_color=00000000&title_color=58A6FF&text_color=C9D1D9&icon_color=F85149&ring_color=58A6FF&custom_title=GitHub%20Stats&card_width=495&disable_animations=true"
-          path: dist/stats-dark.svg
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Generate light GitHub stats
-        uses: soulteary/github-readme-stats-action@v1.0.0
-        with:
-          card: stats
-          options: "username=${{ github.repository_owner }}&show_icons=true&include_all_commits=true&hide=contribs&hide_border=true&bg_color=00000000&title_color=0969DA&text_color=57606A&icon_color=CF222E&ring_color=0969DA&custom_title=GitHub%20Stats&card_width=495&disable_animations=true"
-          path: dist/stats-light.svg
-          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Generate GitHub stats
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node .github/scripts/generate-profile-stats.mjs
 
       - name: Generate dark language card
         uses: soulteary/github-readme-stats-action@v1.0.0
@@ -76,8 +66,7 @@ jobs:
 
       - name: Make generated cards fully static
         run: |
-          sed -i '/\.stagger {/{n;s/opacity: 0;/opacity: 1;/;}' dist/stats-*.svg dist/top-langs-*.svg
-          sed -i 's/Total Stars Earned:/Total Stars:/' dist/stats-*.svg
+          sed -i '/\.stagger {/{n;s/opacity: 0;/opacity: 1;/;}' dist/top-langs-*.svg
 
       - name: Cache typing and commit activity SVGs
         run: |
