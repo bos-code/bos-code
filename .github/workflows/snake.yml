@@ -1,52 +1,111 @@
-# GitHub Action for generating a contribution graph with a snake eating your contributions.
-name: Generate Snake
+name: Update Profile Visuals
 
-# Controls when the action will run.
 on:
   schedule:
-      # every 12 hours
-    - cron: "0 */12 * * *"
-
-  # This command allows us to run the Action automatically from the Actions tab.
+    - cron: "15 3 * * *"
   workflow_dispatch:
-  
-  # Also run on every push on the master branch
   push:
     branches:
-    - main
+      - main
+    paths:
+      - ".github/workflows/snake.yml"
 
-# The sequence of runs in this workflow:
+permissions:
+  contents: write
+
+concurrency:
+  group: profile-visuals
+  cancel-in-progress: true
+
 jobs:
-  # This workflow contains a single job called "build"
-  build:
-    # The type of runner that the job will run on
+  generate:
     runs-on: ubuntu-latest
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      - name: Clone repo
-        uses: actions/checkout@v3
-    
-      - name: Generate the snake files in './dist/'
+      - name: Check out profile repository
+        uses: actions/checkout@v4
+
+      - name: Prepare output directory
+        run: mkdir -p dist
+
+      - name: Generate dark GitHub stats
+        uses: soulteary/github-readme-stats-action@v1.0.0
+        with:
+          card: stats
+          options: "username=${{ github.repository_owner }}&show_icons=true&include_all_commits=true&hide=contribs&hide_border=true&bg_color=00000000&title_color=58A6FF&text_color=C9D1D9&icon_color=F85149&ring_color=58A6FF&custom_title=GitHub%20Stats&card_width=495&disable_animations=true"
+          path: dist/stats-dark.svg
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate light GitHub stats
+        uses: soulteary/github-readme-stats-action@v1.0.0
+        with:
+          card: stats
+          options: "username=${{ github.repository_owner }}&show_icons=true&include_all_commits=true&hide=contribs&hide_border=true&bg_color=00000000&title_color=0969DA&text_color=57606A&icon_color=CF222E&ring_color=0969DA&custom_title=GitHub%20Stats&card_width=495&disable_animations=true"
+          path: dist/stats-light.svg
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate dark language card
+        uses: soulteary/github-readme-stats-action@v1.0.0
+        with:
+          card: top-langs
+          options: "username=${{ github.repository_owner }}&layout=compact&langs_count=8&hide_border=true&bg_color=00000000&title_color=58A6FF&text_color=C9D1D9&card_width=495&disable_animations=true"
+          path: dist/top-langs-dark.svg
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate light language card
+        uses: soulteary/github-readme-stats-action@v1.0.0
+        with:
+          card: top-langs
+          options: "username=${{ github.repository_owner }}&layout=compact&langs_count=8&hide_border=true&bg_color=00000000&title_color=0969DA&text_color=57606A&card_width=495&disable_animations=true"
+          path: dist/top-langs-light.svg
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate dark contribution streak
+        uses: DenverCoder1/github-readme-streak-stats@v1.7.0
+        with:
+          options: "user=${{ github.repository_owner }}&hide_border=true&background=00000000&stroke=30363D&ring=58A6FF&fire=F85149&currStreakNum=58A6FF&sideNums=C9D1D9&currStreakLabel=8B949E&sideLabels=8B949E&dates=6E7681&card_width=495&disable_animations=true"
+          path: dist/streak-dark.svg
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate light contribution streak
+        uses: DenverCoder1/github-readme-streak-stats@v1.7.0
+        with:
+          options: "user=${{ github.repository_owner }}&hide_border=true&background=00000000&stroke=D0D7DE&ring=0969DA&fire=CF222E&currStreakNum=0969DA&sideNums=24292F&currStreakLabel=57606A&sideLabels=57606A&dates=6E7781&card_width=495&disable_animations=true"
+          path: dist/streak-light.svg
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Make generated cards fully static
+        run: |
+          sed -i '/\.stagger {/{n;s/opacity: 0;/opacity: 1;/;}' dist/stats-*.svg dist/top-langs-*.svg
+          sed -i 's/Total Stars Earned:/Total Stars:/' dist/stats-*.svg
+
+      - name: Cache typing and commit activity SVGs
+        run: |
+          curl --fail --location --retry 3 --silent --show-error \
+            "https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=22&duration=3500&pause=900&color=58A6FF&center=true&vCenter=true&width=700&height=55&lines=Frontend+Engineer;React+%C2%B7+Next.js+%C2%B7+React+Native;Interfaces+that+feel+as+good+as+they+work" \
+            --output dist/typing-dark.svg
+          curl --fail --location --retry 3 --silent --show-error \
+            "https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=22&duration=3500&pause=900&color=0969DA&center=true&vCenter=true&width=700&height=55&lines=Frontend+Engineer;React+%C2%B7+Next.js+%C2%B7+React+Native;Interfaces+that+feel+as+good+as+they+work" \
+            --output dist/typing-light.svg
+          curl --fail --location --retry 3 --silent --show-error \
+            "https://github-readme-activity-graph.vercel.app/graph?username=${{ github.repository_owner }}&bg_color=00000000&color=8B949E&line=58A6FF&point=F85149&area=true&area_color=1F6FEB&hide_border=true&radius=8&custom_title=Commit%20Activity" \
+            --output dist/commit-activity-dark.svg
+          curl --fail --location --retry 3 --silent --show-error \
+            "https://github-readme-activity-graph.vercel.app/graph?username=${{ github.repository_owner }}&bg_color=00000000&color=57606A&line=0969DA&point=CF222E&area=true&area_color=54AEFF&hide_border=true&radius=8&custom_title=Commit%20Activity" \
+            --output dist/commit-activity-light.svg
+
+      - name: Generate contribution snake
         uses: Platane/snk@v3
-        id: snake-gif
         with:
           github_user_name: ${{ github.repository_owner }}
           outputs: |
             dist/github-contribution-grid-snake.svg
             dist/github-contribution-grid-snake-dark.svg?palette=github-dark
-            dist/github-contribution-grid-snake.gif?color_snake=orange&color_dots=#bfd6f6,#8dbdff,#64a1f4,#4b91f1,#3c7dd9
-        env:
-           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Show build status
-        run: git status
-
-      - name: Push new files to the output branch
-        uses: crazy-max/ghaction-github-pages@v3.1.0
+      - name: Publish profile assets
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          target_branch: output
-          build_dir: dist
-          commit_message: Update snake animations
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: output
+          publish_dir: ./dist
+          commit_message: "chore(profile): refresh generated visuals"
