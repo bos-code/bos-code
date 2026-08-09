@@ -71,10 +71,10 @@ jobs:
       - name: Cache typing and commit activity SVGs
         run: |
           curl --fail --location --retry 3 --silent --show-error \
-            "https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=22&duration=3500&pause=900&color=58A6FF&center=true&vCenter=true&width=700&height=55&lines=Frontend+Engineer;React+%C2%B7+Next.js+%C2%B7+React+Native;Interfaces+that+feel+as+good+as+they+work" \
+            "https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=22&duration=3500&pause=900&color=58A6FF&center=true&vCenter=true&width=700&height=55&lines=React+%C2%B7+Next.js+%C2%B7+React+Native+%C2%B7+TypeScript;Responsive+interfaces+with+motion+and+intent;Based+in+Nigeria+%C2%B7+Collaborating+worldwide" \
             --output dist/typing-dark.svg
           curl --fail --location --retry 3 --silent --show-error \
-            "https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=22&duration=3500&pause=900&color=0969DA&center=true&vCenter=true&width=700&height=55&lines=Frontend+Engineer;React+%C2%B7+Next.js+%C2%B7+React+Native;Interfaces+that+feel+as+good+as+they+work" \
+            "https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=22&duration=3500&pause=900&color=0969DA&center=true&vCenter=true&width=700&height=55&lines=React+%C2%B7+Next.js+%C2%B7+React+Native+%C2%B7+TypeScript;Responsive+interfaces+with+motion+and+intent;Based+in+Nigeria+%C2%B7+Collaborating+worldwide" \
             --output dist/typing-light.svg
           curl --fail --location --retry 3 --silent --show-error \
             "https://github-readme-activity-graph.vercel.app/graph?username=${{ github.repository_owner }}&bg_color=00000000&color=8B949E&line=58A6FF&point=F85149&area=true&area_color=1F6FEB&hide_border=true&radius=8&custom_title=Commit%20Activity" \
@@ -88,8 +88,11 @@ jobs:
         with:
           github_user_name: ${{ github.repository_owner }}
           outputs: |
-            dist/github-contribution-grid-snake.svg
-            dist/github-contribution-grid-snake-dark.svg?palette=github-dark
+            dist/github-contribution-grid-snake.svg?color_snake=#0969DA&color_dots=#EBEDF0,#DDF4FF,#80CCFF,#38BDF8,#0F8B8D
+            dist/github-contribution-grid-snake-dark.svg?color_snake=#58A6FF&color_dots=#161B22,#0C2D48,#145374,#1B7F8C,#2DD4BF
+
+      - name: Enlarge contribution cells
+        run: sed -i 's/width:12px;height:12px/width:14px;height:14px/g' dist/github-contribution-grid-snake*.svg
 
       - name: Publish profile assets
         uses: peaceiris/actions-gh-pages@v4
