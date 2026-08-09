@@ -1,15 +1,15 @@
-<h1 align="center">Hey, I'm Chidera Okonkwo.</h1>
+<h1 align="center">Chidera Okonkwo</h1>
+
+<p align="center">
+  <strong>Frontend Engineer · Web, Mobile &amp; Product Interfaces</strong>
+</p>
 
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/bos-code/bos-code/output/typing-dark.svg" />
     <source media="(prefers-color-scheme: light), (prefers-color-scheme: no-preference)" srcset="https://raw.githubusercontent.com/bos-code/bos-code/output/typing-light.svg" />
-    <img src="https://raw.githubusercontent.com/bos-code/bos-code/output/typing-light.svg" alt="Frontend Engineer — React, Next.js and React Native" width="700" />
+    <img src="https://raw.githubusercontent.com/bos-code/bos-code/output/typing-light.svg" alt="React, Next.js, React Native and TypeScript — building responsive interfaces with motion and intent" width="700" />
   </picture>
-</p>
-
-<p align="center">
-  I design and build polished product interfaces across web and mobile.
 </p>
 
 <p align="center">
