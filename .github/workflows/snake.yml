@@ -69,21 +69,6 @@ jobs:
         run: |
           sed -i '/\.stagger {/{n;s/opacity: 0;/opacity: 1;/;}' dist/top-langs-*.svg
 
-      - name: Cache typing and commit activity SVGs
-        run: |
-          curl --fail --location --retry 3 --silent --show-error \
-            "https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=22&duration=3500&pause=900&color=58A6FF&center=true&vCenter=true&width=700&height=55&lines=React+%C2%B7+Next.js+%C2%B7+React+Native+%C2%B7+TypeScript;Responsive+interfaces+with+motion+and+intent;Based+in+Nigeria+%C2%B7+Collaborating+worldwide" \
-            --output dist/typing-dark.svg
-          curl --fail --location --retry 3 --silent --show-error \
-            "https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=22&duration=3500&pause=900&color=0969DA&center=true&vCenter=true&width=700&height=55&lines=React+%C2%B7+Next.js+%C2%B7+React+Native+%C2%B7+TypeScript;Responsive+interfaces+with+motion+and+intent;Based+in+Nigeria+%C2%B7+Collaborating+worldwide" \
-            --output dist/typing-light.svg
-          curl --fail --location --retry 3 --silent --show-error \
-            "https://github-readme-activity-graph.vercel.app/graph?username=${{ github.repository_owner }}&bg_color=00000000&color=8B949E&line=58A6FF&point=F85149&area=true&area_color=1F6FEB&hide_border=true&radius=8&custom_title=Commit%20Activity" \
-            --output dist/commit-activity-dark.svg
-          curl --fail --location --retry 3 --silent --show-error \
-            "https://github-readme-activity-graph.vercel.app/graph?username=${{ github.repository_owner }}&bg_color=00000000&color=57606A&line=0969DA&point=CF222E&area=true&area_color=54AEFF&hide_border=true&radius=8&custom_title=Commit%20Activity" \
-            --output dist/commit-activity-light.svg
-
       - name: Generate contribution snake
         uses: Platane/snk@v3
         with:
