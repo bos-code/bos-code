@@ -2,6 +2,8 @@ import { mkdir, writeFile } from "node:fs/promises";
 
 const username = process.env.GITHUB_REPOSITORY_OWNER;
 const outputDirectory = process.env.PROFILE_ASSET_DIR ?? "dist";
+// Optional user-scoped token (read:user) enables private contribution aggregates.
+const profileToken = process.env.PROFILE_STATS_TOKEN || process.env.GITHUB_TOKEN;
 
 if (!username) {
   throw new Error("GITHUB_REPOSITORY_OWNER is required");
@@ -42,21 +44,73 @@ async function getRepositories() {
   return repositories;
 }
 
-const [profile, repositories, commits, pullRequests] = await Promise.all([
-  request(`/users/${encodeURIComponent(username)}`),
+// Query contribution totals through GitHub's contribution model rather than
+// searching public commits/PRs. Only aggregate numbers are ever rendered.
+async function getContributionSummary() {
+  if (!profileToken) {
+    throw new Error("GITHUB_TOKEN or PROFILE_STATS_TOKEN is required");
+  }
+
+  const query = [
+    "query ProfileContributionStats($login: String!) {",
+    "  user(login: $login) {",
+    "    contributionsCollection {",
+    "      contributionCalendar { totalContributions }",
+    "      totalPullRequestContributions",
+    "    }",
+    "  }",
+    "}",
+  ].join("\n");
+
+  const response = await fetch("https://api.github.com/graphql", {
+    method: "POST",
+    headers: {
+      ...headers,
+      Authorization: "Bearer " + profileToken,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ query, variables: { login: username } }),
+  });
+
+  if (!response.ok) {
+    throw new Error("GitHub GraphQL API " + response.status + ": " + (await response.text()));
+  }
+
+  const payload = await response.json();
+  if (payload.errors?.length) {
+    throw new Error("GitHub GraphQL: " + payload.errors.map((error) => error.message).join("; "));
+  }
+
+  const summary = payload.data?.user?.contributionsCollection;
+  if (!summary) {
+    throw new Error("GitHub did not return the contribution summary");
+  }
+
+  return summary;
+}
+
+const [profile, repositories, contributionSummary] = await Promise.all([
+  request("/users/" + encodeURIComponent(username)),
   getRepositories(),
-  request(`/search/commits?q=author%3A${encodeURIComponent(username)}`),
-  request(`/search/issues?q=author%3A${encodeURIComponent(username)}+type%3Apr`),
+  getContributionSummary(),
 ]);
 
+// GitHub's contribution calendar covers the trailing year. Private work is
+// included only when permitted by profile visibility and token permissions.
 const stats = [
-  { value: commits.total_count, label: "COMMITS" },
-  { value: pullRequests.total_count, label: "PULL REQUESTS" },
+  {
+    value: contributionSummary.contributionCalendar.totalContributions,
+    label: "CONTRIBUTIONS (1Y)",
+  },
+  {
+    value: contributionSummary.totalPullRequestContributions,
+    label: "PULL REQUESTS (1Y)",
+  },
   {
     value: repositories
       .filter((repository) => !repository.fork)
       .reduce((total, repository) => total + repository.stargazers_count, 0),
-    label: "STARS EARNED",
+    label: "PUBLIC STARS EARNED",
   },
   { value: profile.public_repos, label: "PUBLIC REPOS" },
 ];
