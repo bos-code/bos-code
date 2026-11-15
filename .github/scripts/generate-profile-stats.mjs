@@ -55,7 +55,7 @@ async function getContributionSummary() {
     "query ProfileContributionStats($login: String!) {",
     "  user(login: $login) {",
     "    contributionsCollection {",
-    "      contributionCalendar { totalContributions }",
+    "      contributionCalendar { totalContributions weeks { contributionDays { contributionCount date } } }",
     "      totalPullRequestContributions",
     "    }",
     "  }",
@@ -173,9 +173,91 @@ function card(theme) {
 </svg>\n`;
 }
 
+
+function typingCard(theme) {
+  const phrases = [
+    "React · Next.js · React Native · TypeScript",
+    "Responsive interfaces with motion and intent",
+    "Based in Nigeria · Collaborating worldwide",
+  ];
+
+  const lines = phrases.map((phrase, index) => {
+    const delay = index === 0 ? 0 : index === 1 ? -8 : -4;
+    return '<text class="phrase" style="animation-delay:' + delay + 's" x="350" y="34" text-anchor="middle">' +
+      escapeXml(phrase) + '</text>';
+  }).join("\n");
+
+  return '<svg width="700" height="55" viewBox="0 0 700 55" xmlns="http://www.w3.org/2000/svg" role="img">' +
+    '<title>Developer introduction</title>' +
+    '<style>' +
+    '.phrase {font:600 21px "Fira Code", "Segoe UI", Ubuntu, sans-serif;fill:' + theme.title + ';opacity:0;animation:rotate 12s linear infinite}' +
+    '@keyframes rotate {0%,28% {opacity:1} 33%,99% {opacity:0} 100% {opacity:1}}' +
+    '@media(prefers-reduced-motion:reduce){.phrase{animation:none}.phrase:first-of-type{opacity:1}}' +
+    '</style>' + lines + '</svg>\n';
+}
+
+function activityGraph(theme) {
+  // Aggregate activity at the week level; never include private repository metadata.
+  const weeks = contributionSummary.contributionCalendar.weeks;
+  if (!Array.isArray(weeks) || weeks.length === 0) {
+    throw new Error("Contribution calendar did not include weeks");
+  }
+
+  const values = weeks.map((week) => week.contributionDays.reduce(
+    (sum, day) => sum + day.contributionCount, 0,
+  ));
+  const peak = Math.max(1, ...values);
+  const left = 55;
+  const right = 855;
+  const top = 72;
+  const bottom = 225;
+  const chartWidth = right - left;
+  const chartHeight = bottom - top;
+  const point = (value, index) => {
+    const x = left + chartWidth * index / Math.max(values.length - 1, 1);
+    const y = bottom - value / peak * chartHeight;
+    return [x.toFixed(1), y.toFixed(1)];
+  };
+  const points = values.map((value, index) => point(value, index).join(",")).join(" ");
+  const first = point(values[0], 0)[0];
+  const last = point(values[values.length - 1], values.length - 1)[0];
+  const area = first + "," + bottom + " " + points + " " + last + "," + bottom;
+  const grid = [0, 0.5, 1].map((ratio) => {
+    const y = (bottom - ratio * chartHeight).toFixed(1);
+    return '<line x1="' + left + '" x2="' + right + '" y1="' + y + '" y2="' + y +
+      '" stroke="' + theme.divider + '" stroke-dasharray="3,7"/>' +
+      '<text x="46" y="' + (+y + 4) + '" text-anchor="end" class="label">' +
+      Math.round(peak * ratio) + '</text>';
+  }).join("");
+
+  return '<svg width="910" height="275" viewBox="0 0 910 275" xmlns="http://www.w3.org/2000/svg" role="img">' +
+    '<title>GitHub contribution activity across the past year</title>' +
+    '<desc>' + escapeXml(contributionSummary.contributionCalendar.totalContributions) +
+    ' contributions over the past year, grouped by week; includes private activity only when GitHub allows it.</desc>' +
+    '<style>' +
+    '.title{font:600 21px "Segoe UI",Ubuntu,sans-serif;fill:' + theme.title + '}' +
+    '.value{font:600 16px "Segoe UI",Ubuntu,sans-serif;fill:' + theme.value + '}' +
+    '.label{font:400 12px "Segoe UI",Ubuntu,sans-serif;fill:' + theme.label + '}' +
+    '</style>' +
+    '<text x="55" y="32" class="title">Contribution Activity</text>' +
+    '<text x="855" y="31" text-anchor="end" class="value">' +
+    escapeXml(contributionSummary.contributionCalendar.totalContributions.toLocaleString("en-US")) +
+    ' total</text>' + grid +
+    '<polygon points="' + area + '" fill="' + theme.title + '" opacity="0.12"/>' +
+    '<polyline points="' + points + '" stroke="' + theme.title +
+    '" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" fill="none"/>' +
+    '<text x="' + left + '" y="251" class="label">Past year</text>' +
+    '<text x="' + right + '" y="251" text-anchor="end" class="label">Recent</text>' +
+    '</svg>\n';
+}
+
 await mkdir(outputDirectory, { recursive: true });
 await Promise.all(
   Object.entries(themes).map(([name, theme]) =>
-    writeFile(`${outputDirectory}/stats-${name}.svg`, card(theme), "utf8"),
+    Promise.all([
+      writeFile(`${outputDirectory}/stats-${name}.svg`, card(theme), "utf8"),
+      writeFile(`${outputDirectory}/typing-${name}.svg`, typingCard(theme), "utf8"),
+      writeFile(`${outputDirectory}/commit-activity-${name}.svg`, activityGraph(theme), "utf8"),
+    ]),
   ),
 );
