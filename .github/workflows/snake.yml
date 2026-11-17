@@ -5,82 +5,55 @@ on:
     - cron: "15 3 * * *"
   workflow_dispatch:
   push:
-    branches:
-      - main
-    paths:
-      - ".github/workflows/snake.yml"
-      - ".github/scripts/generate-profile-stats.mjs"
+    branches: [main]
+    paths: ["README.md", ".github/scripts/**", ".github/workflows/snake.yml"]
+  pull_request:
+    paths: ["README.md", ".github/scripts/**", ".github/workflows/snake.yml"]
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
-  group: profile-visuals
+  group: profile-visuals-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  generate:
+  validate:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Check out profile repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate calculations, private data handling and generated assets
+        run: node --test .github/scripts/profile-stats.test.mjs
 
-      - name: Prepare output directory
-        run: mkdir -p dist
-
-      - name: Generate GitHub stats
+  generate:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: validate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Generate all profile visuals from one authenticated snapshot
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PROFILE_STATS_TOKEN: ${{ secrets.PROFILE_STATS_TOKEN }}
         run: node .github/scripts/generate-profile-stats.mjs
-
-      - name: Generate dark language card
-        uses: soulteary/github-readme-stats-action@v1.0.0
-        with:
-          card: top-langs
-          options: "username=${{ github.repository_owner }}&layout=compact&langs_count=8&hide_border=true&bg_color=00000000&title_color=58A6FF&text_color=C9D1D9&card_width=495&disable_animations=true"
-          path: dist/top-langs-dark.svg
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Generate light language card
-        uses: soulteary/github-readme-stats-action@v1.0.0
-        with:
-          card: top-langs
-          options: "username=${{ github.repository_owner }}&layout=compact&langs_count=8&hide_border=true&bg_color=00000000&title_color=0969DA&text_color=57606A&card_width=495&disable_animations=true"
-          path: dist/top-langs-light.svg
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Generate dark contribution streak
-        uses: DenverCoder1/github-readme-streak-stats@v1.7.0
-        with:
-          options: "user=${{ github.repository_owner }}&hide_border=true&background=00000000&stroke=30363D&ring=58A6FF&fire=F85149&currStreakNum=58A6FF&sideNums=C9D1D9&currStreakLabel=8B949E&sideLabels=8B949E&dates=6E7681&card_width=495&disable_animations=true"
-          path: dist/streak-dark.svg
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Generate light contribution streak
-        uses: DenverCoder1/github-readme-streak-stats@v1.7.0
-        with:
-          options: "user=${{ github.repository_owner }}&hide_border=true&background=00000000&stroke=D0D7DE&ring=0969DA&fire=CF222E&currStreakNum=0969DA&sideNums=24292F&currStreakLabel=57606A&sideLabels=57606A&dates=6E7781&card_width=495&disable_animations=true"
-          path: dist/streak-light.svg
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Make generated cards fully static
+      - name: Validate SVG documents before publishing
         run: |
-          sed -i '/\.stagger {/{n;s/opacity: 0;/opacity: 1;/;}' dist/top-langs-*.svg
-
-      - name: Generate contribution snake
-        uses: Platane/snk@v3
-        with:
-          github_user_name: ${{ github.repository_owner }}
-          outputs: |
-            dist/github-contribution-grid-snake.svg?color_snake=#0969DA&color_dots=#EBEDF0,#DDF4FF,#80CCFF,#38BDF8,#0F8B8D
-            dist/github-contribution-grid-snake-dark.svg?color_snake=#58A6FF&color_dots=#161B22,#0C2D48,#145374,#1B7F8C,#2DD4BF
-
-      - name: Enlarge contribution cells
-        run: sed -i 's/width:12px;height:12px/width:14px;height:14px/g' dist/github-contribution-grid-snake*.svg
-
-      - name: Publish profile assets
+          python - <<'PY'
+          import pathlib, xml.etree.ElementTree as ET
+          files = list(pathlib.Path('dist').glob('*.svg'))
+          assert len(files) == 12, 'Expected all twelve profile assets'
+          for path in files:
+              ET.parse(path)
+          PY
+      - name: Publish complete snapshot after successful generation
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}

@@ -23,7 +23,7 @@
 ## Toolkit
 
 <p align="center">
-  <sub><strong>CORE FRONTEND &amp; MOBILE</strong></sub>
+  <sub><strong>CORE DEVELOPMENT</strong></sub>
   <br /><br />
   <img src="https://raw.githubusercontent.com/LelouchFR/skill-icons/5401d691a2268d5a3ee6c3b3163c31b6a2a0be6d/assets/html.svg" width="44" height="44" alt="HTML" title="HTML" />
   <img src="https://raw.githubusercontent.com/LelouchFR/skill-icons/5401d691a2268d5a3ee6c3b3163c31b6a2a0be6d/assets/css.svg" width="44" height="44" alt="CSS" title="CSS" />
@@ -33,6 +33,8 @@
   <img src="https://raw.githubusercontent.com/LelouchFR/skill-icons/5401d691a2268d5a3ee6c3b3163c31b6a2a0be6d/assets/nextjs-auto.svg" width="44" height="44" alt="Next.js" title="Next.js" />
   <img src="https://raw.githubusercontent.com/LelouchFR/skill-icons/5401d691a2268d5a3ee6c3b3163c31b6a2a0be6d/assets/reactnative-auto.svg" width="44" height="44" alt="React Native" title="React Native" />
   <img src="https://raw.githubusercontent.com/LelouchFR/skill-icons/5401d691a2268d5a3ee6c3b3163c31b6a2a0be6d/assets/expo-auto.svg" width="44" height="44" alt="Expo" title="Expo" />
+  <img src="https://raw.githubusercontent.com/LelouchFR/skill-icons/5401d691a2268d5a3ee6c3b3163c31b6a2a0be6d/assets/golang.svg" width="44" height="44" alt="Go" title="Go" />
+  <img src="https://raw.githubusercontent.com/LelouchFR/skill-icons/5401d691a2268d5a3ee6c3b3163c31b6a2a0be6d/assets/python-auto.svg" width="44" height="44" alt="Python" title="Python" />
 </p>
 
 <p align="center">
@@ -77,12 +79,17 @@
   <sub><strong>CURRENTLY EXPANDING</strong></sub>
   <br /><br />
   <img src="https://raw.githubusercontent.com/LelouchFR/skill-icons/5401d691a2268d5a3ee6c3b3163c31b6a2a0be6d/assets/vuejs-auto.svg" width="44" height="44" alt="Vue" title="Vue" />
-  <img src="https://raw.githubusercontent.com/LelouchFR/skill-icons/5401d691a2268d5a3ee6c3b3163c31b6a2a0be6d/assets/python-auto.svg" width="44" height="44" alt="Python" title="Python" />
 </p>
 
 ---
 
 ## GitHub activity
+
+<p align="center">
+  <a href="https://github.com/bos-code/bos-code/actions/workflows/snake.yml"><img src="https://github.com/bos-code/bos-code/actions/workflows/snake.yml/badge.svg" alt="Profile refresh status" /></a>
+  <br />
+  <sub>Private activity is included where access permits. <a href="https://github.com/bos-code/bos-code/blob/main/.github/profile-stats.md">Coverage &amp; activity rank</a></sub>
+</p>
 
 <p align="center">
   <picture>
@@ -130,3 +137,4 @@
   <br /><br />
   <img src="https://visitor-badge.laobi.icu/badge?page_id=bos-code.bos-code" alt="Profile views" />
 </p>
+

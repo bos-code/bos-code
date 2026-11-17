@@ -1,178 +1,187 @@
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, writeFile } from 'node:fs/promises';
+import { pathToFileURL } from 'node:url';
 
-const username = process.env.GITHUB_REPOSITORY_OWNER;
-const outputDirectory = process.env.PROFILE_ASSET_DIR ?? "dist";
-// Optional user-scoped token (read:user) enables private contribution aggregates.
-const profileToken = process.env.PROFILE_STATS_TOKEN || process.env.GITHUB_TOKEN;
-
-if (!username) {
-  throw new Error("GITHUB_REPOSITORY_OWNER is required");
+export function escapeXml(value) {
+  return String(value).replaceAll('&', '&amp;').replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&apos;');
 }
 
-const headers = {
-  Accept: "application/vnd.github+json",
-  "X-GitHub-Api-Version": "2022-11-28",
-  "User-Agent": "bos-code-profile-readme",
-};
-
-if (process.env.GITHUB_TOKEN) {
-  headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
+// GitHub Readme Stats' one-year rank formula (MIT; see profile-stats.md).
+export function calculateRank({commits, prs, issues, reviews, stars, followers}) {
+  const exponential = x => 1 - 2 ** -x;
+  const logarithmic = x => x / (1 + x);
+  const score = (2 * exponential(commits / 250) + 3 * exponential(prs / 50)
+    + exponential(issues / 25) + exponential(reviews / 2)
+    + 4 * logarithmic(stars / 50) + logarithmic(followers / 10)) / 12;
+  const percentile = 100 * (1 - score);
+  const thresholds = [1, 12.5, 25, 37.5, 50, 62.5, 75, 87.5, 100];
+  return {level: ['S','A+','A','A-','B+','B','B-','C+','C'][thresholds.findIndex(t => percentile <= t)], percentile};
 }
 
-async function request(path) {
-  const response = await fetch(`https://api.github.com${path}`, { headers });
-
-  if (!response.ok) {
-    throw new Error(`GitHub API ${response.status}: ${await response.text()}`);
+export function streaks(days) {
+  const ordered = [...days].sort((a,b) => a.date.localeCompare(b.date));
+  let longest = 0, run = 0, previous;
+  for (const day of ordered) {
+    const adjacent = previous && Date.parse(day.date) - Date.parse(previous) === 86400000;
+    run = day.contributionCount > 0 ? (adjacent ? run + 1 : 1) : 0;
+    longest = Math.max(longest, run);
+    previous = day.date;
   }
-
-  return response.json();
+  // An unfinished final day with no contributions does not break yesterday's streak.
+  let end = ordered.length - 1;
+  if (ordered[end]?.contributionCount === 0) end--;
+  let current = 0;
+  for (let i=end; i>=0 && ordered[i].contributionCount>0; i--) {
+    if (i < end && Date.parse(ordered[i+1].date) - Date.parse(ordered[i].date) !== 86400000) break;
+    current++;
+  }
+  return {current, longest};
 }
 
-async function getRepositories() {
-  const repositories = [];
-
-  for (let page = 1; ; page += 1) {
-    const batch = await request(
-      `/users/${encodeURIComponent(username)}/repos?type=owner&sort=updated&per_page=100&page=${page}`,
-    );
-    repositories.push(...batch);
-
-    if (batch.length < 100) break;
+export async function collect({username, token, personalToken = false, now = new Date(), fetcher = fetch}) {
+  if (!username || !token) throw new Error('GITHUB_REPOSITORY_OWNER and a GitHub token are required');
+  const until = new Date(now);
+  const from = new Date(now); from.setUTCFullYear(from.getUTCFullYear() - 1);
+  const headers = {Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json',
+    'X-GitHub-Api-Version': '2022-11-28', 'User-Agent': 'bos-code-profile-readme'};
+  async function graphql(query, variables = {}) {
+    const response = await fetcher('https://api.github.com/graphql', {
+      method:'POST', headers:{...headers,'Content-Type':'application/json'},
+      body:JSON.stringify({query, variables}), signal:AbortSignal.timeout(60000),
+    });
+    // Never print private API payloads, repository names, or credentials on errors.
+    if (!response.ok) throw new Error(`GitHub request failed (${response.status}); check token access`);
+    const payload = await response.json();
+    if (payload.errors?.length || !payload.data) throw new Error('GitHub GraphQL failed; check token permissions and query');
+    return payload.data;
   }
-
-  return repositories;
+  const languageFields = 'id isFork isPrivate languages(first:100) { totalSize pageInfo { hasNextPage } edges { size node { name color } } }';
+  const data = await graphql(`query Profile($login:String!, $from:DateTime!, $to:DateTime!, $opened:String!, $merged:String!) {
+    viewer { login }
+    user(login:$login) {
+      followers { totalCount }
+      contributionsCollection(from:$from, to:$to) {
+        restrictedContributionsCount
+        totalCommitContributions totalIssueContributions totalPullRequestReviewContributions
+        contributionCalendar { totalContributions weeks { contributionDays { date contributionCount contributionLevel } } }
+        commitContributionsByRepository(maxRepositories:100) { repository { ${languageFields} } }
+        pullRequestContributionsByRepository(maxRepositories:100) { repository { ${languageFields} } }
+      }
+    }
+    opened:search(query:$opened, type:ISSUE) { issueCount }
+    merged:search(query:$merged, type:ISSUE) { issueCount }
+  }`, {login:username,from:from.toISOString(),to:until.toISOString(),
+    opened:`author:${username} is:pr created:${from.toISOString()}..${until.toISOString()}`,
+    merged:`author:${username} is:pr is:merged merged:${from.toISOString()}..${until.toISOString()}`});
+  if (!data.user) throw new Error('Profile not found');
+  if (personalToken && data.viewer.login.toLowerCase() !== username.toLowerCase()) {
+    throw new Error('PROFILE_STATS_TOKEN must belong to the profile owner');
+  }
+  const c = data.user.contributionsCollection;
+  const days = c.contributionCalendar.weeks.flatMap(w=>w.contributionDays);
+  if (!days.length || days.reduce((n,d)=>n+d.contributionCount,0) !== c.contributionCalendar.totalContributions) {
+    throw new Error('Incomplete or inconsistent contribution calendar');
+  }
+  const repos = new Map();
+  for (const group of [c.commitContributionsByRepository,c.pullRequestContributionsByRepository]) {
+    if (group.length === 100) throw new Error('Contribution repository limit reached; refusing incomplete language totals');
+    for (const {repository:r} of group) repos.set(r.id,r);
+  }
+  // Page owned repositories too. The contribution lists above add organization work.
+  let cursor = null, stars = 0;
+  do {
+    const page = await graphql(`query Owned($login:String!, $cursor:String) {
+      user(login:$login) { repositories(first:100, after:$cursor, ownerAffiliations:[OWNER], isFork:false) {
+        pageInfo { hasNextPage endCursor }
+        nodes { ${languageFields} stargazerCount }
+      } }
+    }`, {login:username,cursor});
+    const connection = page.user.repositories;
+    for (const r of connection.nodes) {
+      repos.set(r.id,r);
+      if (!r.isPrivate) stars += r.stargazerCount;
+    }
+    cursor = connection.pageInfo.hasNextPage ? connection.pageInfo.endCursor : null;
+  } while (cursor);
+  const languages = new Map(); let privateRepos = 0;
+  for (const r of repos.values()) {
+    if (r.isFork) continue;
+    if (r.languages.pageInfo.hasNextPage) throw new Error('Language limit reached; refusing incomplete totals');
+    if (r.isPrivate) privateRepos++;
+    for (const {size,node} of r.languages.edges) {
+      const old = languages.get(node.name) ?? {name:node.name,color:node.color ?? '#8B949E',bytes:0};
+      old.bytes += size; languages.set(node.name,old);
+    }
+  }
+  const metrics = {commits:c.totalCommitContributions, prs:data.opened.issueCount,
+    merged:data.merged.issueCount, issues:c.totalIssueContributions,
+    reviews:c.totalPullRequestReviewContributions, stars, followers:data.user.followers.totalCount};
+  return {username, updatedAt:now.toISOString(), from:from.toISOString(), to:until.toISOString(),
+    personalToken, privateRepos, restricted:c.restrictedContributionsCount,
+    calendar:c.contributionCalendar, days, metrics, rank:calculateRank(metrics), streak:streaks(days),
+    languages:[...languages.values()].sort((a,b)=>b.bytes-a.bytes)};
 }
-
-// Query contribution totals through GitHub's contribution model rather than
-// searching public commits/PRs. Only aggregate numbers are ever rendered.
-async function getContributionSummary() {
-  if (!profileToken) {
-    throw new Error("GITHUB_TOKEN or PROFILE_STATS_TOKEN is required");
-  }
-
-  const query = [
-    "query ProfileContributionStats($login: String!) {",
-    "  user(login: $login) {",
-    "    contributionsCollection {",
-    "      contributionCalendar { totalContributions weeks { contributionDays { contributionCount date } } }",
-    "      totalPullRequestContributions",
-    "    }",
-    "  }",
-    "}",
-  ].join("\n");
-
-  const response = await fetch("https://api.github.com/graphql", {
-    method: "POST",
-    headers: {
-      ...headers,
-      Authorization: "Bearer " + profileToken,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ query, variables: { login: username } }),
-  });
-
-  if (!response.ok) {
-    throw new Error("GitHub GraphQL API " + response.status + ": " + (await response.text()));
-  }
-
-  const payload = await response.json();
-  if (payload.errors?.length) {
-    throw new Error("GitHub GraphQL: " + payload.errors.map((error) => error.message).join("; "));
-  }
-
-  const summary = payload.data?.user?.contributionsCollection;
-  if (!summary) {
-    throw new Error("GitHub did not return the contribution summary");
-  }
-
-  return summary;
-}
-
-const [profile, repositories, contributionSummary] = await Promise.all([
-  request("/users/" + encodeURIComponent(username)),
-  getRepositories(),
-  getContributionSummary(),
-]);
-
-// GitHub's contribution calendar covers the trailing year. Private work is
-// included only when permitted by profile visibility and token permissions.
-const stats = [
-  {
-    value: contributionSummary.contributionCalendar.totalContributions,
-    label: "CONTRIBUTIONS (1Y)",
-  },
-  {
-    value: contributionSummary.totalPullRequestContributions,
-    label: "PULL REQUESTS (1Y)",
-  },
-  {
-    value: repositories
-      .filter((repository) => !repository.fork)
-      .reduce((total, repository) => total + repository.stargazers_count, 0),
-    label: "PUBLIC STARS EARNED",
-  },
-  { value: profile.public_repos, label: "PUBLIC REPOS" },
-];
 
 const themes = {
-  dark: {
-    title: "#58A6FF",
-    value: "#C9D1D9",
-    label: "#8B949E",
-    divider: "#30363D",
-  },
-  light: {
-    title: "#0969DA",
-    value: "#24292F",
-    label: "#57606A",
-    divider: "#D0D7DE",
-  },
+  dark:{title:'#58A6FF',value:'#C9D1D9',label:'#8B949E',divider:'#30363D',dots:['#161B22','#0C2D48','#145374','#1B7F8C','#2DD4BF']},
+  light:{title:'#0969DA',value:'#24292F',label:'#57606A',divider:'#D0D7DE',dots:['#EBEDF0','#DDF4FF','#80CCFF','#38BDF8','#0F8B8D']},
 };
-
-function escapeXml(value) {
-  return String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&apos;");
+function svg(width,height,title,theme,body,desc=title) {
+  return `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc"><title id="title">${escapeXml(title)}</title><desc id="desc">${escapeXml(desc)}</desc><style>text{font-family:'Segoe UI',Ubuntu,sans-serif;fill:${theme.value}}.title{font-size:18px;font-weight:600;fill:${theme.title}}.value{font-size:22px;font-weight:600}.label{font-size:11px;fill:${theme.label}}.small{font-size:10px;fill:${theme.label}}</style>${body}</svg>\n`;
 }
-
-function card(theme) {
-  const positions = [
-    { x: 25, y: 91 },
-    { x: 265, y: 91 },
-    { x: 25, y: 158 },
-    { x: 265, y: 158 },
-  ];
-
-  const metrics = stats
-    .map(({ value, label }, index) => {
-      const { x, y } = positions[index];
-      return `
-        <g transform="translate(${x} ${y})">
-          <text class="value">${escapeXml(Number(value).toLocaleString("en-US"))}</text>
-          <text y="22" class="label">${escapeXml(label)}</text>
-        </g>`;
-    })
-    .join("");
-
-  return `<svg width="495" height="190" viewBox="0 0 495 190" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
-  <title id="title">${escapeXml(username)}'s GitHub stats</title>
-  <desc id="desc">${stats.map(({ value, label }) => `${value} ${label.toLowerCase()}`).join(", ")}</desc>
-  <style>
-    .title { font: 600 18px 'Segoe UI', Ubuntu, sans-serif; fill: ${theme.title}; }
-    .value { font: 600 22px 'Segoe UI', Ubuntu, sans-serif; fill: ${theme.value}; }
-    .label { font: 600 10px 'Segoe UI', Ubuntu, sans-serif; letter-spacing: 1px; fill: ${theme.label}; }
-  </style>
-  <text x="25" y="35" class="title">GitHub Stats</text>
-  <path d="M25 52H470" stroke="${theme.divider}" />
-  <path d="M247.5 67V171" stroke="${theme.divider}" />
-  ${metrics}
-</svg>\n`;
+function text(x,y,value,cls='label',extra='') {return `<text x="${x}" y="${y}" class="${cls}" ${extra}>${escapeXml(value)}</text>`;}
+const number = n => Number(n).toLocaleString('en-US');
+function coverage(s) {
+  return s.personalToken ? 'Token-visible activity · private access depends on permissions' : 'Limited access · PROFILE_STATS_TOKEN not configured';
 }
-
+function stamp(s) {return `Updated ${s.updatedAt.slice(0,16).replace('T',' ')} UTC`;}
+function card(s,t) {
+  const rows = [['Contributions',s.calendar.totalContributions],['Commits',s.metrics.commits],
+    ['PRs opened',s.metrics.prs],['PRs merged',s.metrics.merged],['Reviews',s.metrics.reviews],['Issues',s.metrics.issues]];
+  const body = text(25,32,'GitHub Stats', 'title') + text(25,50,'Past year · GitHub-visible totals','small')
+    + rows.map(([label,value],i)=>text(25,78+i*23,label)+text(295,78+i*23,number(value),'label','text-anchor="end"')).join('')
+    + `<circle cx="405" cy="115" r="43" stroke="${t.divider}" stroke-width="5"/><circle cx="405" cy="115" r="43" stroke="${t.title}" stroke-width="5" stroke-dasharray="${(100-s.rank.percentile)/100*270.18} 270.18" transform="rotate(-90 405 115)"/>`
+    + text(405,123,s.rank.level,'value','text-anchor="middle"')+text(405,177,'Activity rank','small','text-anchor="middle"')
+    + text(25,224,stamp(s),'small')+text(25,242,coverage(s),'small');
+  return svg(495,255,'GitHub Stats',t,body,`${rows.map(([label,value])=>label+': '+value).join(', ')}. Rank ${s.rank.level}. ${coverage(s)}. ${stamp(s)}. PRs merged counts merges during the year, including older PRs.`);
+}
+function languageCard(s,t) {
+  const top = s.languages.slice(0,8), total = s.languages.reduce((a,l)=>a+l.bytes,0);
+  let x=25;
+  const bar = top.map(l=>{const width=445*l.bytes/(total||1);const r=`<rect x="${x}" y="62" width="${width}" height="8" fill="${escapeXml(l.color)}"/>`;x+=width;return r;}).join('');
+  const other = Math.max(0,470-x);
+  const labels = top.map((l,i)=>{
+    const x=25+(i%2)*225, y=98+Math.floor(i/2)*25;
+    return `<circle cx="${x+4}" cy="${y-4}" r="4" fill="${escapeXml(l.color)}"/>`+text(x+16,y,`${l.name} ${(100*l.bytes/(total||1)).toFixed(1)}%`);
+  }).join('');
+  return svg(495,255,'Most Used Languages',t,text(25,32,'Most Used Languages','title')
+    +text(25,50,'Repository bytes · owned + contributed repositories (1Y)','small')+bar
+    +`<rect x="${x}" y="62" width="${other}" height="8" fill="${t.divider}"/>`+labels
+    +text(25,203,`Private repositories included: ${s.privateRepos>0?'yes':'none visible'}`,'small')
+    +text(25,224,stamp(s),'small')+text(25,242,'Accessible, non-fork repos; not personal lines written.','small'));
+}
+function streakCard(s,t) {
+  return svg(495,195,'Contribution Streak',t,text(25,30,'Contribution Streak','title')
+    +[[85,s.calendar.totalContributions,'Contributions'],[247,s.streak.current,'Current streak'],[410,s.streak.longest,'Longest streak']].map(([x,v,l])=>
+      text(x,87,number(v),'value','text-anchor="middle"')+text(x,111,l,'label','text-anchor="middle"')).join('')
+    +text(247,139,'Days · past-year calendar · same data as activity and snake','small','text-anchor="middle"')
+    +text(25,163,stamp(s),'small')+text(25,181,coverage(s),'small'));
+}
+// Deterministic serpentine route across the same calendar. Counts drive cell colours;
+// the snake only visits existing calendar cells. No second API or public-only scrape.
+export function snakeCard(s,t) {
+  const cells=[];
+  s.calendar.weeks.forEach((w,x)=>w.contributionDays.forEach(d=>{
+    cells.push({...d,x:24+x*16,y:22+new Date(d.date+'T00:00:00Z').getUTCDay()*16});
+  }));
+  const path=[...cells].sort((a,b)=>a.x-b.x || ((Math.round((a.x-24)/16)%2) ? b.y-a.y : a.y-b.y));
+  const points=path.map(c=>`${c.x+6},${c.y+6}`);
+  const colors={NONE:0,FIRST_QUARTILE:1,SECOND_QUARTILE:2,THIRD_QUARTILE:3,FOURTH_QUARTILE:4};
+  const board=cells.map(c=>`<rect x="${c.x}" y="${c.y}" width="12" height="12" rx="2" fill="${t.dots[colors[c.contributionLevel]??0]}"/>`).join('');
+  const snake=Array.from({length:5},(_,i)=>`<rect class="snake" x="-5" y="-5" width="10" height="10" rx="3" fill="${t.title}" opacity="${1-i*.12}"><animateMotion dur="36s" begin="-${i*.10}s" repeatCount="indefinite" calcMode="linear" path="M${points.join(' L')} L${points[0]}"/></rect>`).join('');
+  return svg(910,165,'Contribution Snake',t,`<style>@media(prefers-reduced-motion:reduce){.snake{display:none}}</style>${board}${snake}`
+    +text(24,154,`${stamp(s)} · ${number(s.calendar.totalContributions)} contributions`,'small'),`Animated snake over the past-year contribution calendar. ${coverage(s)}`);
+}
 
 function typingCard(theme) {
   const phrases = [
@@ -196,7 +205,8 @@ function typingCard(theme) {
     '</style>' + lines + '</svg>\n';
 }
 
-function activityGraph(theme) {
+function activityGraph(s, theme) {
+  const contributionSummary = {contributionCalendar:s.calendar};
   // Aggregate activity at the week level; never include private repository metadata.
   const weeks = contributionSummary.contributionCalendar.weeks;
   if (!Array.isArray(weeks) || weeks.length === 0) {
@@ -247,17 +257,41 @@ function activityGraph(theme) {
     '<polyline points="' + points + '" stroke="' + theme.title +
     '" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" fill="none"/>' +
     '<text x="' + left + '" y="251" class="label">Past year</text>' +
-    '<text x="' + right + '" y="251" text-anchor="end" class="label">Recent</text>' +
+    '<text x="' + right + '" y="251" text-anchor="end" class="label">' + escapeXml(stamp(s)) + '</text>' +
     '</svg>\n';
 }
 
-await mkdir(outputDirectory, { recursive: true });
-await Promise.all(
-  Object.entries(themes).map(([name, theme]) =>
-    Promise.all([
-      writeFile(`${outputDirectory}/stats-${name}.svg`, card(theme), "utf8"),
-      writeFile(`${outputDirectory}/typing-${name}.svg`, typingCard(theme), "utf8"),
-      writeFile(`${outputDirectory}/commit-activity-${name}.svg`, activityGraph(theme), "utf8"),
-    ]),
-  ),
-);
+
+export async function generate(s, directory) {
+  await mkdir(directory,{recursive:true});
+  const files={};
+  for (const [name,t] of Object.entries(themes)) {
+    files[`stats-${name}.svg`]=card(s,t);
+    files[`top-langs-${name}.svg`]=languageCard(s,t);
+    files[`streak-${name}.svg`]=streakCard(s,t);
+    files[`typing-${name}.svg`]=typingCard(t);
+    files[`commit-activity-${name}.svg`]=activityGraph(s,t);
+    files[name==='dark'?'github-contribution-grid-snake-dark.svg':'github-contribution-grid-snake.svg']=snakeCard(s,t);
+  }
+  // Deliberate allowlist: never serialize raw GraphQL objects, tokens or repo metadata.
+  files['profile-summary.json']=JSON.stringify({updatedAt:s.updatedAt,from:s.from,to:s.to,
+    coverage:coverage(s),metrics:s.metrics,contributions:s.calendar.totalContributions,
+    restrictedContributions:s.restricted,rank:s.rank,streak:s.streak,
+    languages:s.languages.map(({name,bytes})=>({name,bytes}))},null,2)+'\n';
+  await Promise.all(Object.entries(files).map(([path,content])=>writeFile(`${directory}/${path}`,content,'utf8')));
+  return files;
+}
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  try {
+    const s=await collect({username:process.env.GITHUB_REPOSITORY_OWNER,
+      token:process.env.PROFILE_STATS_TOKEN || process.env.GITHUB_TOKEN,
+      personalToken:Boolean(process.env.PROFILE_STATS_TOKEN)});
+    await generate(s,process.env.PROFILE_ASSET_DIR ?? 'dist');
+    if (!s.personalToken) console.warn('::warning::PROFILE_STATS_TOKEN is missing; dashboard explicitly shows limited access.');
+    console.log(`Generated profile visuals. ${coverage(s)}`);
+  } catch {
+    // Do not leak potentially private request or error details into public logs.
+    console.error('::error::Profile refresh failed. Check API availability, owner token access and validation tests. Previous published assets were not replaced.');
+    process.exitCode=1;
+  }
+}
