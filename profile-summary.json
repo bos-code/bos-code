@@ -1,0 +1,75 @@
+{
+  "updatedAt": "2026-11-17T19:24:57.838Z",
+  "from": "2025-11-17T19:24:57.838Z",
+  "to": "2026-11-17T19:24:57.838Z",
+  "coverage": "Limited access · PROFILE_STATS_TOKEN not configured",
+  "metrics": {
+    "commits": 810,
+    "prs": 87,
+    "merged": 82,
+    "issues": 0,
+    "reviews": 0,
+    "stars": 4,
+    "followers": 6
+  },
+  "contributions": 2761,
+  "restrictedContributions": 1852,
+  "rank": {
+    "level": "B",
+    "percentile": 61.98749216882111
+  },
+  "streak": {
+    "current": 5,
+    "longest": 20
+  },
+  "languages": [
+    {
+      "name": "TypeScript",
+      "bytes": 5146587
+    },
+    {
+      "name": "JavaScript",
+      "bytes": 1355704
+    },
+    {
+      "name": "HTML",
+      "bytes": 1220189
+    },
+    {
+      "name": "Python",
+      "bytes": 470709
+    },
+    {
+      "name": "CSS",
+      "bytes": 283064
+    },
+    {
+      "name": "SCSS",
+      "bytes": 123714
+    },
+    {
+      "name": "PLpgSQL",
+      "bytes": 117633
+    },
+    {
+      "name": "Kotlin",
+      "bytes": 101502
+    },
+    {
+      "name": "Vue",
+      "bytes": 39624
+    },
+    {
+      "name": "Dockerfile",
+      "bytes": 600
+    },
+    {
+      "name": "Sass",
+      "bytes": 235
+    },
+    {
+      "name": "Procfile",
+      "bytes": 118
+    }
+  ]
+}
