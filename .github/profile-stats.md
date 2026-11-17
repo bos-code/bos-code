@@ -8,7 +8,7 @@ Set the existing Actions secret `PROFILE_STATS_TOKEN` to a user token belonging 
 
 Use only read access approved for the repositories you want included. A classic token normally needs `read:user` for private contribution aggregates and `repo` for private repository language data and detailed PR counts; organization SSO may also require authorization. Fine-grained tokens require the appropriate selected repositories and organization approval, and may not cover every organization. The generator cannot grant access or establish that a token covers every repository. GitHub's profile setting for private contribution visibility also affects anonymous aggregates. Public artifacts contain aggregate numbers, language names and dates, never private repository identifiers or code.
 
-Without the personal token, cards explicitly say `Limited access`. With it, cards say `Token-visible activity`; this is not a claim of complete private coverage. A wrong-owner, invalid or expired token fails the refresh rather than silently publishing public-only replacements. This repository's connector cannot inspect or create Actions secrets, so successful authenticated execution is required to verify deployment coverage.
+Coverage is recorded in `profile-summary.json` and workflow diagnostics rather than displayed as footnotes on the profile. `Limited access` means the personal token is missing; `Token-visible activity` means a personal token was used, not a claim of complete coverage. A wrong-owner, invalid or expired token fails the refresh rather than silently publishing public-only replacements. This repository's connector cannot inspect or create Actions secrets, so successful authenticated execution is required to verify deployment coverage.
 
 ## Metric definitions
 

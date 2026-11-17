@@ -142,8 +142,8 @@ function card(s,t) {
     + rows.map(([label,value],i)=>text(25,78+i*23,label)+text(295,78+i*23,number(value),'label','text-anchor="end"')).join('')
     + `<circle cx="405" cy="115" r="43" stroke="${t.divider}" stroke-width="5"/><circle cx="405" cy="115" r="43" stroke="${t.title}" stroke-width="5" stroke-dasharray="${(100-s.rank.percentile)/100*270.18} 270.18" transform="rotate(-90 405 115)"/>`
     + text(405,123,s.rank.level,'value','text-anchor="middle"')+text(405,177,'Activity rank','small','text-anchor="middle"')
-    + text(25,224,stamp(s),'small')+text(25,242,coverage(s),'small');
-  return svg(495,255,'GitHub Stats',t,body,`${rows.map(([label,value])=>label+': '+value).join(', ')}. Rank ${s.rank.level}. ${coverage(s)}. ${stamp(s)}. PRs merged counts merges during the year, including older PRs.`);
+    + text(25,224,stamp(s),'small');
+  return svg(495,255,'GitHub Stats',t,body,`${rows.map(([label,value])=>label+': '+value).join(', ')}. Rank ${s.rank.level}. ${stamp(s)}. PRs merged counts merges during the year, including older PRs.`);
 }
 function languageCard(s,t) {
   const top = s.languages.slice(0,8), total = s.languages.reduce((a,l)=>a+l.bytes,0);
@@ -157,7 +157,6 @@ function languageCard(s,t) {
   return svg(495,255,'Most Used Languages',t,text(25,32,'Most Used Languages','title')
     +text(25,50,'Repository bytes · owned + contributed repositories (1Y)','small')+bar
     +`<rect x="${x}" y="62" width="${other}" height="8" fill="${t.divider}"/>`+labels
-    +text(25,203,`Private repositories included: ${s.privateRepos>0?'yes':'none visible'}`,'small')
     +text(25,224,stamp(s),'small')+text(25,242,'Accessible, non-fork repos; not personal lines written.','small'));
 }
 function streakCard(s,t) {
@@ -165,7 +164,7 @@ function streakCard(s,t) {
     +[[85,s.calendar.totalContributions,'Contributions'],[247,s.streak.current,'Current streak'],[410,s.streak.longest,'Longest streak']].map(([x,v,l])=>
       text(x,87,number(v),'value','text-anchor="middle"')+text(x,111,l,'label','text-anchor="middle"')).join('')
     +text(247,139,'Days · past-year calendar · same data as activity and snake','small','text-anchor="middle"')
-    +text(25,163,stamp(s),'small')+text(25,181,coverage(s),'small'));
+    +text(25,163,stamp(s),'small'));
 }
 // Deterministic serpentine route across the same calendar. Counts drive cell colours;
 // the snake only visits existing calendar cells. No second API or public-only scrape.
@@ -180,29 +179,31 @@ export function snakeCard(s,t) {
   const board=cells.map(c=>`<rect x="${c.x}" y="${c.y}" width="12" height="12" rx="2" fill="${t.dots[colors[c.contributionLevel]??0]}"/>`).join('');
   const snake=Array.from({length:5},(_,i)=>`<rect class="snake" x="-5" y="-5" width="10" height="10" rx="3" fill="${t.title}" opacity="${1-i*.12}"><animateMotion dur="36s" begin="-${i*.10}s" repeatCount="indefinite" calcMode="linear" path="M${points.join(' L')} L${points[0]}"/></rect>`).join('');
   return svg(910,165,'Contribution Snake',t,`<style>@media(prefers-reduced-motion:reduce){.snake{display:none}}</style>${board}${snake}`
-    +text(24,154,`${stamp(s)} · ${number(s.calendar.totalContributions)} contributions`,'small'),`Animated snake over the past-year contribution calendar. ${coverage(s)}`);
+    +text(24,154,`${stamp(s)} · ${number(s.calendar.totalContributions)} contributions`,'small'),`Animated snake over the past-year contribution calendar.`);
 }
 
-function typingCard(theme) {
+export function typingCard(theme) {
   const phrases = [
-    "React · Next.js · React Native · TypeScript",
-    "Responsive interfaces with motion and intent",
-    "Based in Nigeria · Collaborating worldwide",
+    'React · Next.js · TypeScript · Go · Python',
+    'Building web, desktop and backend systems',
+    'Based in Nigeria · Collaborating worldwide',
   ];
-
-  const lines = phrases.map((phrase, index) => {
-    const delay = index === 0 ? 0 : index === 1 ? -8 : -4;
-    return '<text class="phrase" style="animation-delay:' + delay + 's" x="350" y="34" text-anchor="middle">' +
-      escapeXml(phrase) + '</text>';
-  }).join("\n");
-
-  return '<svg width="700" height="55" viewBox="0 0 700 55" xmlns="http://www.w3.org/2000/svg" role="img">' +
-    '<title>Developer introduction</title>' +
-    '<style>' +
-    '.phrase {font:600 21px "Fira Code", "Segoe UI", Ubuntu, sans-serif;fill:' + theme.title + ';opacity:0;animation:rotate 12s linear infinite}' +
-    '@keyframes rotate {0%,28% {opacity:1} 33%,99% {opacity:0} 100% {opacity:1}}' +
-    '@media(prefers-reduced-motion:reduce){.phrase{animation:none}.phrase:first-of-type{opacity:1}}' +
-    '</style>' + lines + '</svg>\n';
+  const lines = phrases.map((phrase,index) => {
+    const width = phrase.length * 12.6;
+    const left = (700 - width) / 2;
+    // Discrete character positions type, pause, then erase before the next line.
+    const values = [0], times = [0];
+    for (let i=0;i<=phrase.length;i++) {values.push(i*12.6);times.push(.02+.16*i/phrase.length);}
+    values.push(width); times.push(.26);
+    for (let i=phrase.length-1;i>=0;i--) {values.push(i*12.6);times.push(.26+.06*(phrase.length-i)/phrase.length);}
+    values.push(0); times.push(1);
+    const animation = `<animate attributeName="width" values="${values.join(';')}" keyTimes="${times.join(';')}" calcMode="discrete" dur="12s" begin="${index*4}s" repeatCount="indefinite"/>`;
+    return `<defs><clipPath id="typing-${index}"><rect x="${left}" y="7" width="0" height="39">${animation}</rect></clipPath></defs>
+      <g class="typing-line" opacity="0"><animate attributeName="opacity" values="1;1;0;0" keyTimes="0;0.32;0.333333;1" calcMode="discrete" dur="12s" begin="${index*4}s" repeatCount="indefinite"/>
+      <text x="${left}" y="34" clip-path="url(#typing-${index})" textLength="${width}" lengthAdjust="spacingAndGlyphs">${escapeXml(phrase)}</text>
+      <rect x="${left}" y="10" width="2" height="28" fill="${theme.title}"><animate attributeName="x" values="${values.map(v=>left+v).join(';')}" keyTimes="${times.join(';')}" calcMode="discrete" dur="12s" begin="${index*4}s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;0" dur="0.8s" calcMode="discrete" repeatCount="indefinite"/></rect></g>`;
+  }).join('');
+  return `<svg width="700" height="55" viewBox="0 0 700 55" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="typing-title"><title id="typing-title">Software engineer — web, desktop and backend systems</title><style>text{font:600 21px monospace;fill:${theme.title}}.static-intro{display:none}@media(prefers-reduced-motion:reduce){.typing-line{display:none}.static-intro{display:block}}</style>${lines}<text class="static-intro" x="350" y="34" text-anchor="middle">${escapeXml(phrases[0])}</text></svg>\n`;
 }
 
 function activityGraph(s, theme) {
@@ -243,7 +244,7 @@ function activityGraph(s, theme) {
   return '<svg width="910" height="275" viewBox="0 0 910 275" xmlns="http://www.w3.org/2000/svg" role="img">' +
     '<title>GitHub contribution activity across the past year</title>' +
     '<desc>' + escapeXml(contributionSummary.contributionCalendar.totalContributions) +
-    ' contributions over the past year, grouped by week; includes private activity only when GitHub allows it.</desc>' +
+    ' contributions over the past year, grouped by week.</desc>' +
     '<style>' +
     '.title{font:600 21px "Segoe UI",Ubuntu,sans-serif;fill:' + theme.title + '}' +
     '.value{font:600 16px "Segoe UI",Ubuntu,sans-serif;fill:' + theme.value + '}' +
@@ -287,7 +288,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
       token:process.env.PROFILE_STATS_TOKEN || process.env.GITHUB_TOKEN,
       personalToken:Boolean(process.env.PROFILE_STATS_TOKEN)});
     await generate(s,process.env.PROFILE_ASSET_DIR ?? 'dist');
-    if (!s.personalToken) console.warn('::warning::PROFILE_STATS_TOKEN is missing; dashboard explicitly shows limited access.');
+    if (!s.personalToken) console.warn('::warning::PROFILE_STATS_TOKEN is missing; see the workflow documentation for data coverage.');
     console.log(`Generated profile visuals. ${coverage(s)}`);
   } catch {
     // Do not leak potentially private request or error details into public logs.
