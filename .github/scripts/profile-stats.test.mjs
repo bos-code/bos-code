@@ -48,10 +48,10 @@ test('private repo languages are included, deduplicated, paginated and forks exc
 test('wrong-owner personal token fails instead of claiming private coverage',async()=>{
   await assert.rejects(collect({...config,fetcher:fixture({viewer:'another-user'}).fetcher}),/profile owner/);
 });
-test('missing personal token is represented as limited access',async()=>{
+test('coverage remains in metadata without profile footnotes',async()=>{
   const s=await collect({...config,personalToken:false,fetcher:fixture().fetcher});
   const dir=await mkdtemp(join(tmpdir(),'profile-limited-'));
-  try {const files=await generate(s,dir); assert.match(files['stats-dark.svg'],/Limited access/);} finally {await rm(dir,{recursive:true});}
+  try {const files=await generate(s,dir); assert.doesNotMatch(files['stats-dark.svg'],/Limited access|PROFILE_STATS_TOKEN|private access/); assert.match(files['profile-summary.json'],/Limited access/);} finally {await rm(dir,{recursive:true});}
 });
 test('API failures and partial GraphQL responses do not generate zero-filled stats',async()=>{
   await assert.rejects(collect({...config,fetcher:async()=>({ok:false,status:401})}),/401/);
@@ -89,7 +89,10 @@ test('all twelve SVGs and aggregate JSON share one snapshot without private iden
     for(const theme of ['dark','light']) {
       assert.match(files[`stats-${theme}.svg`],/PRs merged/);
       assert.match(files[`stats-${theme}.svg`],/Activity rank/);
-      assert.match(files[`top-langs-${theme}.svg`],/Private repositories included: yes/);
+      assert.doesNotMatch(files[`top-langs-${theme}.svg`],/Private repositories|none visible/);
+      assert.match(files[`typing-${theme}.svg`],/attributeName="width"/);
+      assert.match(files[`typing-${theme}.svg`],/calcMode="discrete"/);
+      assert.match(files[`typing-${theme}.svg`],/Go · Python/);
       assert.match(files[`commit-activity-${theme}.svg`],/9 total/);
     }
     const saved=JSON.parse(await readFile(join(dir,'profile-summary.json'),'utf8'));

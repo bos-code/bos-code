@@ -1,14 +1,14 @@
 <h1 align="center">Chidera Okonkwo</h1>
 
 <p align="center">
-  <strong>Frontend Engineer · Web, Mobile &amp; Product Interfaces</strong>
+  <strong>Software Engineer · Web, Desktop &amp; Backend Systems</strong>
 </p>
 
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/bos-code/bos-code/output/typing-dark.svg" />
     <source media="(prefers-color-scheme: light), (prefers-color-scheme: no-preference)" srcset="https://raw.githubusercontent.com/bos-code/bos-code/output/typing-light.svg" />
-    <img src="https://raw.githubusercontent.com/bos-code/bos-code/output/typing-light.svg" alt="React, Next.js, React Native and TypeScript — building responsive interfaces with motion and intent" width="700" />
+    <img src="https://raw.githubusercontent.com/bos-code/bos-code/output/typing-light.svg" alt="React, Next.js, TypeScript, Go and Python — building web, desktop and backend systems" width="700" />
   </picture>
 </p>
 
@@ -87,8 +87,6 @@
 
 <p align="center">
   <a href="https://github.com/bos-code/bos-code/actions/workflows/snake.yml"><img src="https://github.com/bos-code/bos-code/actions/workflows/snake.yml/badge.svg" alt="Profile refresh status" /></a>
-  <br />
-  <sub>Private activity is included where access permits. <a href="https://github.com/bos-code/bos-code/blob/main/.github/profile-stats.md">Coverage &amp; activity rank</a></sub>
 </p>
 
 <p align="center">
