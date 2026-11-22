@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-11-21T10:59:54.911Z",
-  "from": "2025-11-21T10:59:54.911Z",
-  "to": "2026-11-21T10:59:54.911Z",
+  "updatedAt": "2026-11-22T11:23:31.364Z",
+  "from": "2025-11-22T11:23:31.364Z",
+  "to": "2026-11-22T11:23:31.364Z",
   "coverage": "Limited access · PROFILE_STATS_TOKEN not configured",
   "metrics": {
     "commits": 811,
@@ -19,7 +19,7 @@
     "percentile": 61.87957018026498
   },
   "streak": {
-    "current": 2,
+    "current": 0,
     "longest": 20
   },
   "languages": [
